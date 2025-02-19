@@ -2,15 +2,15 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Чат с другом</title>
+    <title>Чат по IP</title>
     <style>
         #chat {
-            display: none;
             border: 1px solid #ccc;
             padding: 10px;
             width: 300px;
             height: 400px;
             overflow-y: scroll;
+            margin-bottom: 10px;
         }
         #messageInput {
             width: 240px;
@@ -18,17 +18,56 @@
     </style>
 </head>
 <body>
-    <button id="generateBtn">Генерировать код</button>
-    <p id="generatedCode"></p>
-    <input type="text" id="codeInput" placeholder="Введите код">
+    <h1>Чат по IP</h1>
+    <label for="ipInput">IP адрес:</label>
+    <input type="text" id="ipInput" placeholder="например, ws://192.168.1.100:8080">
     <button id="connectBtn">Подключиться</button>
 
-    <div id="chat">
+    <div id="chat" style="display:none;">
         <div id="messages"></div>
         <input type="text" id="messageInput" placeholder="Введите сообщение">
         <button id="sendBtn">Отправить</button>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const connectBtn = document.getElementById('connectBtn');
+            const ipInput = document.getElementById('ipInput');
+            const chat = document.getElementById('chat');
+            const messages = document.getElementById('messages');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            let socket;
+
+            connectBtn.addEventListener('click', () => {
+                const ip = ipInput.value;
+                socket = new WebSocket(ip);
+
+                socket.onopen = () => {
+                    chat.style.display = 'block';
+                    messages.innerHTML += '<p>Подключено к серверу</p>';
+                };
+
+                socket.onmessage = (event) => {
+                    messages.innerHTML += `<p>${event.data}</p>`;
+                };
+
+                socket.onclose = () => {
+                    messages.innerHTML += '<p>Соединение закрыто</p>';
+                };
+
+                socket.onerror = (error) => {
+                    messages.innerHTML += `<p>Ошибка: ${error.message}</p>`;
+                };
+            });
+
+            sendBtn.addEventListener('click', () => {
+                const message = messageInput.value;
+                socket.send(message);
+                messages.innerHTML += `<p>Вы: ${message}</p>`;
+                messageInput.value = '';
+            });
+        });
+    </script>
 </body>
 </html>
